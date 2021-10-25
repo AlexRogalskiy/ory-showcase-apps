@@ -96,9 +96,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await secureStorage.persistToken(sessionToken);
       final userInfo = await authService.getCurrentSession(sessionToken);
       yield AuthAuthenticated(
-          email: userInfo["email"] ?? ""
-,
-          id: userInfo["id"] ?? "",
+          email: userInfo["email"],
+          id: userInfo["id"],
           token: sessionToken);
     } on InvalidCredentialsException catch (e) {
       yield AuthRegistrationInitialized( //save auth errors

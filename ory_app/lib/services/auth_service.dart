@@ -107,7 +107,7 @@ class AuthService {
               'https://blissful-chebyshev-drdmsyuc3t.projects.oryapis.com/api/kratos/public/self-service/logout/api'),
           headers: <String, String>{'Content-Type': 'application/json'},
           body: jsonEncode(<String, String>{"session_token": sessionToken}));
-      if (response.statusCode == 204) { //revokation successful
+      if (response.statusCode == 204) { //revocation successful
         await storage.deleteToken();
       } else {
         throw Exception();
