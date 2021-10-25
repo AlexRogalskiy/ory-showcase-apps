@@ -8,9 +8,9 @@ abstract class AuthEvent extends Equatable {
 
 class StartApp extends AuthEvent {} //app is started
 
-class InitRegistrationFlow extends AuthEvent {} //initialize registration flow 
-
 class InitLoginFlow extends AuthEvent {} //initialize login flow
+
+class InitRegistrationFlow extends AuthEvent {} //initialize registration flow 
 
 class SignIn extends AuthEvent {
   final String flowId;
@@ -22,13 +22,6 @@ class SignIn extends AuthEvent {
   List<Object?> get props => [flowId, email, password];
 }
 
-class ChangeField extends AuthEvent { //change email/password fields in sign in/sign up form
-  final String value;
-  final String field;
-
-  ChangeField(this.value, this.field);
-}
-
 class SignUp extends AuthEvent {
   final String flowId;
   final String email;
@@ -37,6 +30,13 @@ class SignUp extends AuthEvent {
   SignUp(this.flowId, this.email, this.password);
   @override
   List<Object?> get props => [flowId, email, password];
+}
+
+class ChangeField extends AuthEvent { //change email/password fields in sign in/sign up form
+  final String value;
+  final String field;
+
+  ChangeField(this.value, this.field);
 }
 
 class SignOut extends AuthEvent{}

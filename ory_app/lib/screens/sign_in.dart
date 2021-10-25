@@ -17,13 +17,9 @@ class SignInScreen extends StatelessWidget {
 class SignInForm extends StatelessWidget {
   const SignInForm({Key? key}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
+  Widget buildSignInForm(BuildContext context, AuthState state) {
     final authBloc = BlocProvider.of<AuthBloc>(context);
-
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
-        final authState = state as AuthLoginInitialized;
+    final authState = state as AuthLoginInitialized;
         return Center(
           child: SizedBox(
             height: MediaQuery.of(context).size.height,
@@ -56,7 +52,7 @@ class SignInForm extends StatelessWidget {
                               errorMaxLines: 2,
                                   border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10)),
-                                  hintText: 'Email'),
+                                  hintText: "Email"),
                                    onChanged: (val) => authBloc.add(ChangeField(val, "email")), //every time an input changes, call an event and change the state
                             ),
                             TextFormField(
@@ -69,7 +65,7 @@ class SignInForm extends StatelessWidget {
                               errorMaxLines: 2,
                                   border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10)),
-                                  hintText: 'Password'),
+                                  hintText: "Password"),
                                    onChanged: (val) => authBloc.add(ChangeField(val, "password")), //every time an input changes, call an event and change the state
                             ),
                             if (state.generalError != "") //show error message if there is any
@@ -84,7 +80,7 @@ class SignInForm extends StatelessWidget {
                                 onPressed: () => authBloc.add(SignIn(
                                     authState.flowId,
                                     authState.email, authState.password)),
-                                child: const Text('Sign in'),
+                                child: const Text("Sign in"),
                               ),
                             ),
                           ]),
@@ -106,7 +102,14 @@ class SignInForm extends StatelessWidget {
               ),
             ),
           ),
-        );
+        );  
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return buildSignInForm(context, state);
       },
     );
   }

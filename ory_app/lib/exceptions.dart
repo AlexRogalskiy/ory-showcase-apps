@@ -6,3 +6,8 @@ class InvalidCredentialsException implements Exception { // invalid credentials 
   InvalidCredentialsException(this.errors);
 } 
 
+class UnknownException implements Exception { //unknown exceptions
+  final String message;
+
+  UnknownException(this.message);
+}

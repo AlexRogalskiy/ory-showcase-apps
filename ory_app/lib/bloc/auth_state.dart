@@ -35,28 +35,6 @@ class AuthAuthenticated extends AuthState {
   List<Object?> get props => [email, id, token, message];
 }
 
-class AuthRegistrationInitialized extends AuthState {
-  final String flowId;
-  final String email;
-  final String emailError;
-  final String password;
-  final String passwordError;
-  final String generalError;
-
-  const AuthRegistrationInitialized(
-      {required this.flowId,
-      this.email = "",
-      this.emailError = "",
-      this.password = "",
-      this.passwordError = "",
-      this.generalError = "",
-      String? message})
-      : super(message);
-  @override
-  List<Object?> get props =>
-      [flowId, email, emailError, password, passwordError, generalError, message];
-}
-
 class AuthLoginInitialized extends AuthState {
   final String flowId;
   final String email;
@@ -75,6 +53,28 @@ class AuthLoginInitialized extends AuthState {
       String? message})
       : super(message);
 
+  @override
+  List<Object?> get props =>
+      [flowId, email, emailError, password, passwordError, generalError, message];
+}
+
+class AuthRegistrationInitialized extends AuthState {
+  final String flowId;
+  final String email;
+  final String emailError;
+  final String password;
+  final String passwordError;
+  final String generalError;
+
+  const AuthRegistrationInitialized(
+      {required this.flowId,
+      this.email = "",
+      this.emailError = "",
+      this.password = "",
+      this.passwordError = "",
+      this.generalError = "",
+      String? message})
+      : super(message);
   @override
   List<Object?> get props =>
       [flowId, email, emailError, password, passwordError, generalError, message];

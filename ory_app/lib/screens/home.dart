@@ -11,7 +11,7 @@ class HomeScreen extends StatelessWidget {
         resizeToAvoidBottomInset: false,
         appBar: AppBar(
             title: Text(
-              'Session information', style: TextStyle(color: Theme.of(context).colorScheme.primary)
+              "Session information", style: TextStyle(color: Theme.of(context).colorScheme.primary)
             ),
             backgroundColor: Colors.transparent,
             elevation: 0,

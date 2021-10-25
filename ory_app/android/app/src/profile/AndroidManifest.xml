@@ -1,7 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.ory_app">
-    <!-- Flutter needs it to communicate with the running application
-         to allow setting breakpoints, to provide hot reload, etc.
+    package="com.example.ory_app"> <!-- this application ID is only 
+    intended for demo purposes and can not be used for production setups.
+    Flutter needs it to communicate with the running application
+    to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
 </manifest>

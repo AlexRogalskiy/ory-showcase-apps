@@ -22,10 +22,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Stream<AuthState> mapEventToState(AuthEvent event) async* {
     if (event is StartApp) {
       yield* _startApp();
-    } else if (event is InitRegistrationFlow) {
-      yield* _initRegistrationFlow();
     } else if (event is InitLoginFlow) {
       yield* _initLoginFlow();
+    } else if (event is InitRegistrationFlow) {
+      yield* _initRegistrationFlow();
     } else if (event is ChangeField) {
       yield* _changeField(event);
     } else if (event is SignIn) {
@@ -37,7 +37,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-
   Stream<AuthState> _startApp() async* {
     try {
       if (await secureStorage.hasToken()) {
@@ -45,17 +44,70 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final userInfo = await authService.getCurrentSession(sessionToken!);
 
         yield AuthAuthenticated(
-            email: userInfo["email"],
-            id: userInfo["id"],
-            token: sessionToken);
+            email: userInfo["email"], id: userInfo["id"], token: sessionToken);
       } else {
         yield const AuthUnauthenticated();
       }
     } on UnauthorizedException catch (_) {
       await SecureStorage().deleteToken();
       yield const AuthUnauthenticated();
+    } catch (e) {
+      yield const AuthUninitialized();
+    }
+  }
+
+  Stream<AuthState> _initLoginFlow() async* {
+    final currentState = state;
+    try {
+      yield AuthLoading();
+
+      final flowId = await authService.initiateLoginFlow();
+
+      yield AuthLoginInitialized(flowId: flowId);
+    } on UnknownException catch (e) {
+      if (currentState is AuthRegistrationInitialized) {
+        yield AuthRegistrationInitialized(
+            flowId: currentState.flowId,
+            email: currentState.email,
+            password: currentState.password,
+            message: e.message);
+      } else {
+        yield AuthUninitialized(e.message);
+      }
     } catch (_) {
-      yield const AuthUninitialized("An error occured. Please try again later");
+      if (currentState is AuthRegistrationInitialized) {
+        yield AuthRegistrationInitialized(
+            flowId: currentState.flowId,
+            email: currentState.email,
+            password: currentState.password,
+            message: "An error occured. Try again later.");
+      } else {
+        yield const AuthUninitialized("An error occured. Try again later.");
+      }
+    }
+  }
+
+  Stream<AuthState> _initRegistrationFlow() async* {
+    try {
+      yield AuthLoading();
+
+      final flowId = await authService.intiateRegistrationFlow();
+
+      yield AuthRegistrationInitialized(flowId: flowId);
+    } on UnknownException catch (e) {
+      final currentState = state as AuthLoginInitialized;
+      yield AuthLoginInitialized(
+          flowId: currentState.flowId,
+          email: currentState.email,
+          password: currentState.password,
+          message: e.message);
+    } catch (_) {
+      final currentState = state as AuthLoginInitialized;
+      yield AuthLoginInitialized(
+          flowId: currentState.flowId,
+          email: currentState.email,
+          password: currentState.password,
+          message: "An error occured. Try again later.");
     }
   }
 
@@ -67,9 +119,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await secureStorage.persistToken(sessionToken);
       final userInfo = await authService.getCurrentSession(sessionToken);
       yield AuthAuthenticated(
-          email: userInfo["email"],
-          id: userInfo["id"],
-          token: sessionToken);
+          email: userInfo["email"], id: userInfo["id"], token: sessionToken);
     } on InvalidCredentialsException catch (e) {
       yield AuthLoginInitialized(
           flowId: event.flowId,
@@ -78,6 +128,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: event.password,
           passwordError: e.errors["password"] ?? "",
           generalError: e.errors["general"] ?? "");
+    } on UnknownException catch (e) {
+      yield AuthLoginInitialized(
+          flowId: event.flowId,
+          email: event.email,
+          password: event.password,
+          message: e.message);
     } catch (_) {
       yield AuthLoginInitialized(
           flowId: event.flowId,
@@ -96,11 +152,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await secureStorage.persistToken(sessionToken);
       final userInfo = await authService.getCurrentSession(sessionToken);
       yield AuthAuthenticated(
-          email: userInfo["email"],
-          id: userInfo["id"],
-          token: sessionToken);
+          email: userInfo["email"], id: userInfo["id"], token: sessionToken);
     } on InvalidCredentialsException catch (e) {
-      yield AuthRegistrationInitialized( //save auth errors
+      yield AuthRegistrationInitialized(
+          //save auth errors
           flowId: event.flowId,
           email: event.email,
           emailError: e.errors["traits.email"] ?? "",
@@ -109,6 +164,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           generalError: e.errors["general"] ?? "");
     } on UnauthorizedException catch (_) {
       yield const AuthUnauthenticated(); //navigate to sign in page when session token invalid
+    } on UnknownException catch (e) {
+      yield AuthLoginInitialized(
+          flowId: event.flowId,
+          email: event.email,
+          password: event.password,
+          message: e.message);
     } catch (e) {
       yield AuthRegistrationInitialized(
           flowId: event.flowId,
@@ -116,19 +177,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: event.password,
           message: "An Error occured. Please try again later.");
     }
-  }
-
-  Stream<AuthState> _signOut(SignOut event) async* {
-    final currentState = state as AuthAuthenticated;
-    try {
-      yield AuthLoading();
-    await AuthService().signOut();
-    yield const AuthUnauthenticated();
-    } catch (_) {
-      yield AuthAuthenticated(email: currentState.email, id: currentState.id, token: currentState.token, message: "An error occured. Please try again later.");
-    }
-    
-
   }
 
   Stream<AuthState> _changeField(ChangeField event) async* {
@@ -161,40 +209,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Stream<AuthState> _initRegistrationFlow() async* {
+  Stream<AuthState> _signOut(SignOut event) async* {
+    final currentState = state as AuthAuthenticated;
     try {
-      final flowId = await authService.intiateRegistrationFlow();
-
-      yield AuthRegistrationInitialized(flowId: flowId);
-    } catch (e) {
-      final currentState = state as AuthLoginInitialized;
-      yield AuthLoginInitialized(
-          flowId: currentState.flowId,
+      yield AuthLoading();
+      await AuthService().signOut();
+      yield const AuthUnauthenticated();
+    } on UnknownException catch (e) {
+      yield AuthAuthenticated(
           email: currentState.email,
-          password: currentState.password,
-          message:
-              "Could not initialize registration flow. Please try again later.");
-    }
-  }
-
-  Stream<AuthState> _initLoginFlow() async* {
-    try {
-      final flowId = await authService.initiateLoginFlow();
-
-      yield AuthLoginInitialized(flowId: flowId);
-    } catch (e) {
-      if (state is AuthRegistrationInitialized) {
-        final currentState = state as AuthRegistrationInitialized;
-        yield AuthRegistrationInitialized(
-            flowId: currentState.flowId,
-            email: currentState.email,
-            password: currentState.password,
-            message:
-                "Could not initialize login flow. Please try again later.");
-      } else {
-        yield const AuthUninitialized(
-            "An error occured. Please try again later.");
-      }
+          id: currentState.id,
+          token: currentState.token,
+          message: e.message);
+    } catch (_) {
+      yield AuthAuthenticated(
+          email: currentState.email,
+          id: currentState.id,
+          token: currentState.token,
+          message: "An error occured. Please try again later.");
     }
   }
 }

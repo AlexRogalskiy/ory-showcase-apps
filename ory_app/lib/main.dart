@@ -7,7 +7,7 @@ import 'package:ory_app/services/auth_service.dart';
 import 'package:ory_app/storage.dart';
 
 Future<void> main() async {
-  await dotenv.load(fileName: '.env');
+  await dotenv.load(fileName: ".env");
   final secureStorage = SecureStorage();
   final authService = AuthService();
   runApp(BlocProvider(
@@ -38,7 +38,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Flutter Demo',
         home: const AppWrapper(),
         theme: ThemeData(
           primarySwatch: MaterialColor(0xFFFC7589, pinkColor),

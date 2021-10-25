@@ -52,7 +52,7 @@ class SignUpForm extends StatelessWidget {
                               errorMaxLines: 2,
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10)),
-                              hintText: 'Email'),
+                              hintText: "Email"),
                           onChanged: (val) =>
                               authBloc.add(ChangeField(val, "email")), //every time an input changes, call an event and change the state
                         ),
@@ -66,7 +66,7 @@ class SignUpForm extends StatelessWidget {
                               errorMaxLines: 2,
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10)),
-                              hintText: 'Password'),
+                              hintText: "Password"),
                           onChanged: (val) =>
                               authBloc.add(ChangeField(val, "password")), //every time an input changes, call an event and change the state
                         ),
@@ -83,7 +83,7 @@ class SignUpForm extends StatelessWidget {
                                 authState.flowId,
                                 authState.email,
                                 authState.password)),
-                            child: const Text('Sign Up'),
+                            child: const Text("Sign Up"),
                           ),
                         ),
                       ]),
