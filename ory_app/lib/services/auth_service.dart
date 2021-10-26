@@ -135,7 +135,7 @@ class AuthService {
               "$kratosURL/self-service/logout/api"),
           headers: <String, String>{"Content-Type": "application/json"},
           body: jsonEncode(<String, String>{"session_token": sessionToken}));
-          
+
       if (response.statusCode == 204) {
         //revocation successful
         await storage.deleteToken();

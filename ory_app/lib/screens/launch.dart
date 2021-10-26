@@ -15,7 +15,7 @@ class LaunchScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const CircularProgressIndicator(),
-          if (authState.message != null) //show error message if there is any
+          if (authState.message != null && authState is AuthUninitialized) //show error message if there is any 
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(

@@ -34,10 +34,9 @@ class HomeScreen extends StatelessWidget {
 class UserInformation extends StatelessWidget {
   const UserInformation({Key? key}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
-      builder: (context, state) {
+  
+  Widget buildUserInformation(BuildContext context, AuthState state) {
+    
         final currentState = state as AuthAuthenticated;
         return Padding(
           padding: const EdgeInsets.all(15.0),
@@ -101,7 +100,20 @@ class UserInformation extends StatelessWidget {
             ),
           ),
         );
-      },
-    );
+  }
+
+  Widget buildError(BuildContext context) {
+    return Center(child: Icon(Icons.error, size: 50,color: Theme.of(context).colorScheme.primary,),);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AuthBloc, AuthState>(builder: (context, state) {
+      if(state.message == null) {
+        return buildUserInformation(context, state);
+      } else { //if there is an error message, return an error widget 
+        return buildError(context);
+      }
+    });
   }
 }

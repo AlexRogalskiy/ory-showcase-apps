@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:equatable/equatable.dart';
 
@@ -41,18 +42,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       if (await secureStorage.hasToken()) {
         final sessionToken = await secureStorage.getToken();
-        final userInfo = await authService.getCurrentSession(sessionToken!);
-
-        yield AuthAuthenticated(
-            email: userInfo["email"], id: userInfo["id"], token: sessionToken);
+        yield* getCurrentSession(sessionToken!);
       } else {
         yield const AuthUnauthenticated();
       }
     } on UnauthorizedException catch (_) {
       await SecureStorage().deleteToken();
       yield const AuthUnauthenticated();
+    } on UnknownException catch (e) {
+      yield AuthUninitialized(e.message);
     } catch (e) {
-      yield const AuthUninitialized();
+      yield const AuthUninitialized(
+          "An error occured. Please try again later.");
     }
   }
 
@@ -117,9 +118,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final sessionToken =
           await authService.signIn(event.flowId, event.email, event.password);
       await secureStorage.persistToken(sessionToken);
-      final userInfo = await authService.getCurrentSession(sessionToken);
-      yield AuthAuthenticated(
-          email: userInfo["email"], id: userInfo["id"], token: sessionToken);
+      yield* getCurrentSession(sessionToken);
     } on InvalidCredentialsException catch (e) {
       yield AuthLoginInitialized(
           flowId: event.flowId,
@@ -134,12 +133,36 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           email: event.email,
           password: event.password,
           message: e.message);
+    } on UnauthorizedException catch (_) {
+      await secureStorage.deleteToken();
+      yield const AuthUnauthenticated("Your session expired. Please sign in.");
     } catch (_) {
       yield AuthLoginInitialized(
           flowId: event.flowId,
           email: event.email,
           password: event.password,
-          message: "An Error occured. Please try again later.");
+          message: "An error occured. Please try again later.");
+    }
+  }
+
+  Stream<AuthState> getCurrentSession(String token) async* {
+    try {
+      final userInfo = await authService.getCurrentSession(token);
+      yield AuthAuthenticated(
+          email: userInfo["email"], id: userInfo["id"], token: token);
+    } on UnknownException catch (e) {
+      yield AuthAuthenticated(
+          email: "", id: "", token: token, message: e.message);
+    } on UnauthorizedException catch (_) {
+      await secureStorage.deleteToken();
+      yield const AuthUnauthenticated("Your session expired. Please sign in.");
+    } on Exception catch (_) {
+      yield AuthAuthenticated(
+          email: "",
+          id: "",
+          token: token,
+          message:
+              "An error occured while retrieving information. Please try again later.");
     }
   }
 
@@ -150,9 +173,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final sessionToken =
           await authService.signUp(event.flowId, event.email, event.password);
       await secureStorage.persistToken(sessionToken);
-      final userInfo = await authService.getCurrentSession(sessionToken);
-      yield AuthAuthenticated(
-          email: userInfo["email"], id: userInfo["id"], token: sessionToken);
+      yield* getCurrentSession(sessionToken);
     } on InvalidCredentialsException catch (e) {
       yield AuthRegistrationInitialized(
           //save auth errors
@@ -163,7 +184,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           passwordError: e.errors["password"] ?? "",
           generalError: e.errors["general"] ?? "");
     } on UnauthorizedException catch (_) {
-      yield const AuthUnauthenticated(); //navigate to sign in page when session token invalid
+      await secureStorage.deleteToken();
+      yield const AuthUnauthenticated(
+          "Your session expired. Please sign in."); //navigate to sign in page when session token invalid
     } on UnknownException catch (e) {
       yield AuthLoginInitialized(
           flowId: event.flowId,
@@ -175,7 +198,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           flowId: event.flowId,
           email: event.email,
           password: event.password,
-          message: "An Error occured. Please try again later.");
+          message: "An error occured. Please try again later.");
     }
   }
 

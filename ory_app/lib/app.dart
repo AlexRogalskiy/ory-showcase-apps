@@ -27,7 +27,7 @@ class AppWrapper extends StatelessWidget {
         // loading, show spinner
         return const Scaffold(body: Center(child: CircularProgressIndicator()));
       } else if (state is AuthUnauthenticated) {
-        // user is not authenticated,  initialize registration flow
+        // user is not authenticated,  initialize login flow
         final authBloc = BlocProvider.of<AuthBloc>(context);
         authBloc.add(InitLoginFlow());
       } else if (state is AuthRegistrationInitialized) {
