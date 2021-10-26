@@ -117,7 +117,11 @@ class AuthService {
       return Map<String, dynamic>.from(userData["oryUser"]);
     } else if (response.statusCode == 401) {
       throw UnauthorizedException();
-    } else {
+    } else if(response.statusCode == 403 || response.statusCode == 500) {
+      final data = jsonDecode(response.body);
+      final error = data["error"];
+      throw UnknownException(error["message"]);
+      }else {
       throw Exception();
     }
   }
@@ -128,9 +132,10 @@ class AuthService {
     if (sessionToken != null) {
       final response = await http.delete(
           Uri.parse(
-              "https://blissful-chebyshev-drdmsyuc3t.projects.oryapis.com/api/kratos/public/self-service/logout/api"),
+              "$kratosURL/self-service/logout/api"),
           headers: <String, String>{"Content-Type": "application/json"},
           body: jsonEncode(<String, String>{"session_token": sessionToken}));
+          
       if (response.statusCode == 204) {
         //revocation successful
         await storage.deleteToken();
