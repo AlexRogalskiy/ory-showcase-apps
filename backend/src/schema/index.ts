@@ -1,1 +1,1 @@
-export { createUser, tokenSchema } from "./user.schema"
+export { tokenSchema } from "./user.schema"

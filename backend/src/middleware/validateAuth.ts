@@ -1,57 +1,46 @@
 import {AnySchema} from "yup";
-import {Request, Response, NextFunction} from "express";
-import log from "../logger";
-import * as config from "../../config/default";
+import {NextFunction, Request, Response} from "express";
 
 const fetch = require("node-fetch");
-
-type user = {
-    id: string
-    traits: {
-        email: string
-    }
-    verifiable_addresses: {
-        verified: boolean
-    }[]
-}
-
-const isUser = (u: any): u is user => {
-    return true
-}
 
 const validate = (schema: AnySchema) => async (
     req: Request,
     res: Response,
     next: NextFunction
-    ) => {
-        await schema.validate({
-            body: req.body,
-            query: req.query,
-            params: req.params,
-            headers: req.headers
-        });
+) => {
 
-        const session_token: string = <string>req.headers.session_token;
+    await schema.validate({
+        body: req.body,
+        query: req.query,
+        params: req.params,
+        headers: req.headers
+    });
 
-        return fetch(config.default.kratos.public + "/sessions/whoami", {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Session-Token': session_token
-            },
-        }).then((whoami: any) => whoami.json()).then(
-            (oryUser: any) => {
-                if (isUser(oryUser.identity)) {
-                    req.body.oryUser = {
-                        id: oryUser.identity.id,
-                        email: oryUser.identity.traits.email,
-                        verified: oryUser.identity.verifiable_addresses[0].verified
-                    }
-                }
-                return next()
+    const session_token: string = <string>req.headers.session_token;
+
+    return fetch("https://compassionate-booth-0do1b9fi04.projects.oryapis.com/api/kratos/public/sessions/whoami", {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Session-Token': session_token
+        },
+    }).then((oryResponse: any) => {
+        if (oryResponse.status !== 200)
+            throw oryResponse;
+        oryResponse.json().then((oryJson: any) => {
+            req.body.oryUser = {
+                id: oryJson.identity.id,
+                email: oryJson.identity.traits.email,
+                verified: oryJson.identity.verifiable_addresses[0].verified
             }
-        ).catch((whoami: any) => res.status(whoami.statusCode).send());
-    }
-;
+            return next();
+        })
+    }).catch((errorResponse: any) => {
+        errorResponse.json().then((errorJson: any) => {
+            return res.status(errorResponse.status).send(errorJson.error.message);
+        })
+    })
+};
+
 
 export default validate;
