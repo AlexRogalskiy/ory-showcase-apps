@@ -1,5 +1,6 @@
 import {AnySchema} from "yup";
 import {NextFunction, Request, Response} from "express";
+import config from "../../config/default";
 
 const fetch = require("node-fetch");
 
@@ -18,7 +19,7 @@ const validate = (schema: AnySchema) => async (
 
     const session_token: string = <string>req.headers.session_token;
 
-    return fetch("https://compassionate-booth-0do1b9fi04.projects.oryapis.com/api/kratos/public/sessions/whoami", {
+    return fetch(config.kratos.public + "sessions/whoami", {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

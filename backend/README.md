@@ -4,6 +4,8 @@ We want to show you a working middleware without much more. For that reason we k
 
 ### How to run it locally?
 
+Put your public URL in the conig file!
+
 Make sure you have got npm installed on your machine.
 
 After cloning the repository, you need to run 
